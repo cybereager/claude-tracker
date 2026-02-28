@@ -2,7 +2,7 @@
 
 A lightweight native macOS menu bar app that tracks your [Claude Code](https://claude.ai/code) token usage and costs in real time — no account login required.
 
-![ClaudeTracker menu bar screenshot](https://github.com/rajdeepchaudhari/claude-tracker/assets/placeholder/menubar.png)
+![ClaudeTracker menu bar screenshot](https://github.com/cybereager/claude-tracker/assets/placeholder/menubar.png)
 
 ---
 
@@ -38,7 +38,7 @@ A lightweight native macOS menu bar app that tracks your [Claude Code](https://c
 
 ### Option A — DMG (recommended)
 
-1. Download `ClaudeTracker-1.0.0.dmg` from the [latest release](https://github.com/rajdeepchaudhari/claude-tracker/releases/latest)
+1. Download `ClaudeTracker-1.0.0.dmg` from the [latest release](https://github.com/cybereager/claude-tracker/releases/latest)
 2. Open the DMG and drag **ClaudeTracker** to your **Applications** folder
 3. Launch from Applications — it appears in your menu bar immediately
 
@@ -48,7 +48,7 @@ A lightweight native macOS menu bar app that tracks your [Claude Code](https://c
 ### Option B — Build from source
 
 ```bash
-git clone https://github.com/rajdeepchaudhari/claude-tracker.git
+git clone https://github.com/cybereager/claude-tracker.git
 cd claude-tracker
 make release     # builds .app + DMG in dist/
 open dist/ClaudeTracker.app
