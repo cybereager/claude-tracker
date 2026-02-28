@@ -190,37 +190,20 @@ struct PopoverView: View {
             VStack(spacing: 16) {
                 if manager.planType.isSubscription {
                     let oauth = manager.oauthUsage
-                    let isLive = oauth?.fiveHourUtilization != nil
 
-                    // 5-hour session bar — prefer real OAuth utilisation
-                    let fiveFraction: Double = {
-                        if let u = oauth?.fiveHourUtilization { return min(u, 1.0) }
-                        let used  = manager.currentStats.fiveHourRequests
-                        let limit = manager.planType.fiveHourLimit ?? 1
-                        return min(Double(used) / Double(limit), 1.0)
-                    }()
+                    // 5-hour session bar — real data only, no fake estimates
                     usageBar(
                         label: "5-hr Session",
-                        fraction: fiveFraction,
-                        usedCount: manager.currentStats.fiveHourRequests,
-                        limitCount: manager.planType.fiveHourLimit,
+                        fraction: oauth?.fiveHourUtilization,
                         subtitle: fiveHourResetSubtitle,
-                        isLive: isLive
+                        isLive: oauth?.fiveHourUtilization != nil
                     )
                     Divider()
 
-                    // Weekly bar
-                    let weeklyFraction: Double = {
-                        if let u = oauth?.weeklyUtilization { return min(u, 1.0) }
-                        let used  = manager.currentStats.weekRequests
-                        let limit = manager.planType.weeklyLimit ?? 1
-                        return min(Double(used) / Double(limit), 1.0)
-                    }()
+                    // Weekly bar — real data only
                     usageBar(
                         label: "Weekly",
-                        fraction: weeklyFraction,
-                        usedCount: manager.currentStats.weekRequests,
-                        limitCount: manager.planType.weeklyLimit,
+                        fraction: oauth?.weeklyUtilization,
                         subtitle: weeklyResetSubtitle,
                         isLive: oauth?.weeklyUtilization != nil
                     )
@@ -344,14 +327,13 @@ struct PopoverView: View {
 
     private func usageBar(
         label: String,
-        fraction: Double,
-        usedCount: Int? = nil,
-        limitCount: Int? = nil,
+        fraction: Double?,          // nil = no data yet
         subtitle: String,
         isLive: Bool = false
     ) -> some View {
-        let pct = Int(min(fraction, 1.0) * 100)
-        let barColor: Color = fraction > 0.9 ? .red : fraction > 0.7 ? .orange : .accentColor
+        let f = fraction.map { min($0, 1.0) } ?? 0.0
+        let hasData = fraction != nil
+        let barColor: Color = f > 0.9 ? .red : f > 0.7 ? .orange : .accentColor
 
         return VStack(spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
@@ -365,37 +347,39 @@ struct PopoverView: View {
                         .help("Live data from Claude API")
                 }
                 Spacer()
-                Text("\(pct)%")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundStyle(barColor)
-                    .monospacedDigit()
+                if hasData {
+                    Text("\(Int(f * 100))%")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundStyle(barColor)
+                        .monospacedDigit()
+                } else {
+                    Text("—")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.secondary)
+                }
             }
-            // Bar
+            // Bar track (always shown; fill only when data is available)
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 4)
                         .fill(Color.secondary.opacity(0.12))
                         .frame(height: 8)
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(barColor)
-                        .frame(width: max(geo.size.width * min(fraction, 1.0), fraction > 0 ? 8 : 0), height: 8)
-                        .animation(.easeInOut(duration: 0.4), value: fraction)
+                    if hasData {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(barColor)
+                            .frame(width: max(geo.size.width * f, f > 0 ? 8 : 0), height: 8)
+                            .animation(.easeInOut(duration: 0.4), value: f)
+                    }
                 }
             }
             .frame(height: 8)
             HStack {
-                if let used = usedCount {
-                    let limitStr = limitCount.map { "\($0)" } ?? "—"
-                    Text(isLive ? "~\(used) / \(limitStr) messages" : "\(used) / \(limitStr) messages")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                }
-                Spacer()
-                Text(subtitle)
+                Text(hasData ? subtitle : "Waiting for data…")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }

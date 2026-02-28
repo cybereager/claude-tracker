@@ -109,24 +109,13 @@ final class MenuBarManager: NSObject, ObservableObject {
             if let oauth = oauthUsage,
                let fiveU = oauth.fiveHourUtilization,
                let weekU = oauth.weeklyUtilization {
-                // Real data from Claude OAuth API
                 let fPct = min(Int(fiveU * 100), 100)
                 let wPct = min(Int(weekU * 100), 100)
                 button.title = "◆ \(fPct)% | \(wPct)%"
-                button.toolTip = "5-hr session: \(fPct)%  Weekly: \(wPct)%  (live from Claude API)"
+                button.toolTip = "5-hr session: \(fPct)%  Weekly: \(wPct)%  (live)"
             } else {
-                let fiveHr = currentStats.fiveHourRequests
-                let weekly = currentStats.weekRequests
-                if let fiveHrLimit = planType.fiveHourLimit,
-                   let weeklyLimit = planType.weeklyLimit {
-                    let fPct = min(Int(Double(fiveHr) / Double(fiveHrLimit) * 100), 100)
-                    let wPct = min(Int(Double(weekly) / Double(weeklyLimit) * 100), 100)
-                    button.title = "◆ \(fPct)% | \(wPct)%"
-                    button.toolTip = "5-hr session: \(fiveHr)/\(fiveHrLimit) msgs (\(fPct)%)  Weekly: \(weekly)/\(weeklyLimit) msgs (\(wPct)%)"
-                } else {
-                    button.title = "◆ \(fiveHr) msgs"
-                    button.toolTip = "Last 5h: \(fiveHr) msgs  Week: \(weekly) msgs"
-                }
+                button.title = "◆ —% | —%"
+                button.toolTip = "Subscription usage unavailable — click for details"
             }
         } else {
             let cost = currentStats.todayCost

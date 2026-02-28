@@ -9,7 +9,10 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "ClaudeScope",
-            path: "Sources/ClaudeScope"
+            path: "Sources/ClaudeScope",
+            linkerSettings: [
+                .linkedLibrary("sqlite3")
+            ]
         )
     ]
 )
