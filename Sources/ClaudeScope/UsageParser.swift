@@ -89,6 +89,11 @@ actor UsageParser {
         let newlineByte = UInt8(ascii: "\n")
         var lastGoodOffset = fromOffset
 
+        // Deduplication: Claude streams multiple JSONL lines per API call, each with the same
+        // message.id + requestId and identical (cumulative) token counts. We count each
+        // unique API call exactly once, matching CodexBar's approach.
+        var seenKeys = Set<String>()
+
         while true {
             let chunk: Data
             if #available(macOS 10.15.4, *) {
@@ -103,23 +108,28 @@ actor UsageParser {
 
             while let newlineIndex = remainder.firstIndex(of: newlineByte) {
                 let lineData = remainder[remainder.startIndex..<newlineIndex]
-                // Advance past the newline
                 remainder = Data(remainder[(newlineIndex + 1)...])
 
-                if let record = parseLine(lineData, fileURL: url) {
-                    records.append(record)
+                if let (record, dedupKey) = parseLine(lineData, fileURL: url) {
+                    if let key = dedupKey {
+                        if seenKeys.contains(key) {
+                            // Duplicate streaming chunk for the same API call — skip
+                        } else {
+                            seenKeys.insert(key)
+                            records.append(record)
+                        }
+                    } else {
+                        // Older log entries without IDs: treat as distinct
+                        records.append(record)
+                    }
                 }
-                // Track offset after each successfully delimited line
-                // (file position minus remaining buffer)
                 if let currentPos = try? handle.offset() {
                     lastGoodOffset = currentPos - UInt64(remainder.count)
                 }
             }
         }
 
-        // Update local offset mirror to last good newline boundary (not mid-line)
         localOffsets[url.path] = lastGoodOffset
-
         return records
     }
 
@@ -137,7 +147,9 @@ actor UsageParser {
         return f
     }()
 
-    private func parseLine(_ data: Data, fileURL: URL) -> UsageRecord? {
+    /// Returns (record, dedupKey) where dedupKey = "messageId:requestId" when both are present.
+    /// Callers must skip records whose dedupKey has already been seen in this file scan.
+    private func parseLine(_ data: Data, fileURL: URL) -> (UsageRecord, String?)? {
         guard !data.isEmpty else { return nil }
 
         guard let entry = try? Self.decoder.decode(RawEntry.self, from: data) else { return nil }
@@ -154,13 +166,9 @@ actor UsageParser {
         guard let date = parseTimestamp(entry.timestamp) else { return nil }
 
         let project = projectName(from: entry.cwd, fileURL: fileURL)
-
-        // Non-nil stop_reason means a complete API response (end_turn, tool_use, stop_sequence).
-        // Streaming intermediate chunks have null stop_reason and ~3-8 tokens — we parse them
-        // for cost accuracy but don't count them toward subscription limits.
         let hasStopReason = message.stopReason != nil
 
-        return UsageRecord(
+        let record = UsageRecord(
             timestamp: date,
             projectName: project,
             model: modelKind,
@@ -170,6 +178,18 @@ actor UsageParser {
             cacheReadTokens: usage.cacheReadInputTokens,
             hasStopReason: hasStopReason
         )
+
+        // Build dedup key from message.id + requestId (same as CodexBar).
+        // Claude emits multiple streaming JSONL lines per API call with identical token counts;
+        // only the first occurrence for each unique pair should be counted.
+        let dedupKey: String?
+        if let msgId = message.id, let reqId = entry.requestId {
+            dedupKey = "\(msgId):\(reqId)"
+        } else {
+            dedupKey = nil
+        }
+
+        return (record, dedupKey)
     }
 
     private func parseTimestamp(_ str: String) -> Date? {
