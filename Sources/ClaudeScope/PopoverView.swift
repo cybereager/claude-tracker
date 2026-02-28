@@ -43,7 +43,7 @@ struct PopoverView: View {
     private var headerView: some View {
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Claude Tracker")
+                Text("ClaudeScope")
                     .font(.headline)
                 if manager.isLoading {
                     Text("Loading…")
@@ -194,7 +194,7 @@ struct PopoverView: View {
                         label: "5-hr Session",
                         used: manager.currentStats.fiveHourRequests,
                         limit: manager.planType.fiveHourLimit,
-                        subtitle: "Resets after 5 hours of inactivity"
+                        subtitle: fiveHourResetSubtitle
                     )
                     Divider()
                     // Weekly bar
@@ -229,6 +229,27 @@ struct PopoverView: View {
                         .padding(.top, 4)
                 }
             }
+        }
+    }
+
+    private var fiveHourResetSubtitle: String {
+        guard let resets = manager.currentStats.fiveHourWindowResets else {
+            return "No messages in current window"
+        }
+        let diff = resets.timeIntervalSinceNow
+        if diff <= 0 { return "Window reset" }
+        let h = Int(diff) / 3600
+        let m = (Int(diff) % 3600) / 60
+        let timeStr: String = {
+            let fmt = DateFormatter()
+            fmt.dateStyle = .none
+            fmt.timeStyle = .short
+            return fmt.string(from: resets)
+        }()
+        if h > 0 {
+            return "Resets at \(timeStr) (in \(h)h \(m)m)"
+        } else {
+            return "Resets at \(timeStr) (in \(m)m)"
         }
     }
 

@@ -9,6 +9,7 @@ struct CostCalculator {
         stats.lastUpdated = now
 
         let fiveHoursAgo = now.addingTimeInterval(-5 * 3600)
+        var earliestFiveHour: Date? = nil
 
         let calendar = Calendar.current
         let startOfToday = calendar.startOfDay(for: now)
@@ -51,6 +52,10 @@ struct CostCalculator {
             if record.timestamp >= fiveHoursAgo {
                 stats.fiveHourTokens += tokens
                 if record.hasStopReason { stats.fiveHourRequests += 1 }
+                // Track earliest timestamp in window to compute exact reset time
+                if earliestFiveHour == nil || record.timestamp < earliestFiveHour! {
+                    earliestFiveHour = record.timestamp
+                }
             }
 
             // Per-model accumulation
@@ -73,6 +78,7 @@ struct CostCalculator {
             if record.hasStopReason { stats.byProject[record.projectName]!.requestCount += 1 }
         }
 
+        stats.fiveHourWindowResets = earliestFiveHour.map { $0.addingTimeInterval(5 * 3600) }
         return stats
     }
 }

@@ -149,6 +149,9 @@ struct UsageStats {
     var fiveHourRequests: Int = 0
     var fiveHourTokens: Int = 0
 
+    /// When the 5-hour session window resets (earliest msg in window + 5h). nil if no msgs.
+    var fiveHourWindowResets: Date? = nil
+
     var lastUpdated: Date = Date()
     var recordCount: Int = 0
 

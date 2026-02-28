@@ -1,5 +1,5 @@
-VERSION := 1.0.0
-APP_NAME := ClaudeTracker
+VERSION  := 1.1.0
+APP_NAME := ClaudeScope
 BUNDLE   := dist/$(APP_NAME).app
 DMG_NAME := dist/$(APP_NAME)-$(VERSION).dmg
 
@@ -22,6 +22,7 @@ dist/$(APP_NAME)-$(VERSION).dmg: $(BUNDLE)
 	@mkdir -p dist/dmg-staging
 	@cp -r $(BUNDLE) dist/dmg-staging/
 	@ln -sf /Applications dist/dmg-staging/Applications
+	@cp "Resources/Install $(APP_NAME).command" "dist/dmg-staging/Install $(APP_NAME).command"
 	@hdiutil create -volname "$(APP_NAME)" \
 	  -srcfolder dist/dmg-staging \
 	  -ov -format UDRW -fs HFS+ dist/temp-rw.dmg > /dev/null
@@ -32,17 +33,19 @@ dist/$(APP_NAME)-$(VERSION).dmg: $(BUNDLE)
 	     set current view of container window to icon view; \
 	     set toolbar visible of container window to false; \
 	     set statusbar visible of container window to false; \
-	     set bounds of container window to {100,100,620,380}; \
+	     set bounds of container window to {100,100,660,400}; \
 	     set icon size of icon view options of container window to 100; \
-	     set position of item "$(APP_NAME).app" of container window to {150,120}; \
-	     set position of item "Applications" of container window to {370,120}; \
+	     set position of item "$(APP_NAME).app" of container window to {130,150}; \
+	     set position of item "Applications" of container window to {390,150}; \
+	     set position of item "Install $(APP_NAME).command" of container window to {260,280}; \
 	     update without registering applications; \
 	   end tell' 2>/dev/null || true; \
 	 hdiutil detach "$$MOUNT_DIR" -quiet
 	@hdiutil convert dist/temp-rw.dmg \
 	  -format UDZO -imagekey zlib-level=9 \
 	  -o $(DMG_NAME) > /dev/null
-	@rm -f dist/temp-rw.dmg dist/dmg-staging
+	@rm -f dist/temp-rw.dmg
+	@rm -rf dist/dmg-staging
 	@echo "✓ $(DMG_NAME)"
 
 $(BUNDLE): .build/release/$(APP_NAME)

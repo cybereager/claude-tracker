@@ -19,6 +19,26 @@
             "target": "ClaudeTracker",
             "configuration": "release",
             "preLaunchTask": "swift: Build Release ClaudeTracker"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:claude-tracker}",
+            "name": "Debug ClaudeScope",
+            "target": "ClaudeScope",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug ClaudeScope"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:claude-tracker}",
+            "name": "Release ClaudeScope",
+            "target": "ClaudeScope",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release ClaudeScope"
         }
     ]
 }

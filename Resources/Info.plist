@@ -4,26 +4,32 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleIdentifier</key>
-    <string>com.claudetracker.app</string>
+    <string>com.claudescope.app</string>
     <key>CFBundleName</key>
-    <string>ClaudeTracker</string>
+    <string>ClaudeScope</string>
+    <key>CFBundleDisplayName</key>
+    <string>ClaudeScope</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>2</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>1.1.0</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>
-    <string>ClaudeTracker</string>
+    <string>ClaudeScope</string>
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <key>LSUIElement</key>
     <true/>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.developer-tools</string>
     <key>NSHumanReadableDescription</key>
     <string>Tracks Claude Code token usage and cost from local JSONL files.</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>ClaudeScope uses Apple Events to arrange the installer window.</string>
 </dict>
 </plist>
